@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Listado topográfico - AbsNet2 (HTML con búsqueda)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 20px; background: #f7fafc; color: #111827; }
+    header { display:flex; gap:12px; align-items:center; margin-bottom:18px; }
+    h1 { font-size:1.25rem; margin:0; }
+    .search-wrap { display:flex; gap:8px; align-items:center; margin-left:auto; }
+    input[type="search"] {
+      width:360px; max-width:60vw;
+      padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1;
+      font-size:0.95rem;
+    }
+    button { padding:8px 10px; border-radius:8px; border:1px solid #cbd5e1; background:white; cursor:pointer; }
+    button:active { transform: translateY(1px); }
+    .meta { font-size:0.85rem; color:#475569; margin-bottom:8px; }
+    #results { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; background:white; border-radius:8px; padding:14px; border:1px solid #e2e8f0; max-height:70vh; overflow:auto; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    .highlight { background: #fffbdd; border-radius:4px; padding:0 2px; }
+    .controls { margin-top:8px; display:flex; gap:8px; align-items:center; }
+    .small { font-size:0.85rem; color:#64748b; }
+    @media (max-width:640px){
+      input[type="search"] { width:180px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Listado topográfico de ejemplares — AbsNet2 (HTML)</h1>
+      <div class="meta">Contenido extraído del PDF original. Fuente: AbsNet2.pdf. </div>
+    </div>
+
+    <div class="search-wrap" role="search" aria-label="Buscar en el listado">
+      <input id="search" type="search" placeholder="Buscar (ej. título, signatura, código...)" aria-label="Barra de búsqueda"/>
+      <button id="clear">Borrar</button>
+      <button id="download">Descargar HTML</button>
+    </div>
+  </header>
+
+  <div class="small">Consejo: escribe y pulsa Enter; Esc limpia la búsqueda. La búsqueda es insensible a mayúsculas.</div>
+
+  <div id="results" aria-live="polite"></div>
+
+  <div class="controls">
+    <div class="small">Total líneas: <span id="totalLines">0</span></div>
+  </div>
+
+<script>
+/* Contenido plano extraído del PDF (conserva saltos de línea). */
+const rawText = `24/11/2025 Página 1
+LISTADO TOPOGRÁFICO DE EJEMPLARES
+Signatura Sig. supl. Suc. Loc. Cod. Bar.Nº Reg. Título
+(038) 34 DIC 478 FL 1007137582 Diccionario básico jurídico /
+82-9 AGU agu 478 FL 1006649915 El águila dormida : I Concurso de historietas de la Fundació
+FL (036) 796 478 FL 1008760963 Los tresmiles de Sierra Nevada : y otras excursiones de un d
+FL (036) 913 478 FL 1006730774 La Vega Sierra Elvira : una alfombra verde entre montañas /
+FL (036) 913 478 FL 1007880201 La Vega Sierra Elvira : una alfombra verde entre montañas /
+FL 001 JIM 478 FL 1010116954 La utopia de la libertad y los herrores de la humanidad /
+FL 159 JIM 478 FL 1010637216 La vida, un camino hacia el crecimiento personal /
+FL 2 PAR 478 FL 1009236483 Compendio de la Beata de Sierra Elvira /
+FL 22 PAR 478 FL 1008088371 Santa Ana, patrona de Atarfe : primer libro de actas de la H
+FL 27 JIM 478 FL 1009772738 Las mentiras sobre Jesucristo /
+FL 282 MAR 478 FL 1002059580 La iglesia de Granada en el siglo XVI : documentos para su h
+FL 321 FON 478 FL 1002134338 Rey y alcaldes : la segunda Transición /
+FL 324 ATA 478 FL 1006291344 Atarfe, ciudad de encuentro : Plan ciudad 1999/2003.
+FL 324 SIE 478 FL 1007163907 Siempre Atarfe :haciendo ciudad, Plan de acción municipal 20
+FL 332 PAD 478 FL 1010317275 El libro del Apeo del lugar Atarfe, hecho por el LicenciadoP
+FL 332 PAD 478 FL 1010317276 El libro del Apeo del lugar Atarfe, hecho por el LicenciadoP
+FL 332 PAD 478 FL 1010317280 El libro del Apeo del lugar Atarfe, hecho por el LicenciadoP
+FL 332 PAD 478 FL 1010317268 El libro del Apeo del lugar Atarfe, hecho por el LicenciadoP
+FL 332 PAD 478 FL 1010310275 El libro del Apeo del lugar Atarfe, hecho por el LicenciadoP
+FL 336 ATA 478 FL 1006291364 Atarfe : presupuesto municipal 2004 /
+FL 338 MEN 478 FL 1002052584 La Vega de Granada : transformaciones agrarias recientes en
+FL 338 RUB 478 FL 1007759472 El pasado del futuro : vestigios de la industrialización en
+FL 377 CIN 478 FL 1008351686 50 años I.E.S. Iliberis Atarfe : 1968-2018.
+FL 377 CIN 478 FL 1008582315 50 años IES Ilíberis Atarfe : 1968/2018.
+FL 394 FIE 478 FL 1004494900 Fiestas de Atarfe, julio 2011: del 22 al 26 : [programa].
+FL 394 FIE 478 FL 1006321239 Fiestas patronales 2013, del 24 al 28 de julio : [programa]
+FL 394 fie 478 FL 1003141766 Fiestas populares de Atarfe, del 21 al 26 de julio : [progra
+FL 394 fie 478 FL 1002591104 Fiestas populares de Atarfe, 23, 24, 25, 26 y 27 de julio :
+FL 394 fie 478 FL 1002590557 Fiestas de Atarfe, del 21 al 26 de julio : [programa].
+FL 394 fie 478 FL 1002590597 Fiestas populares de Atarfe, 24, 25, 26, 27 y 28 de julio :
+FL 394 fie 478 FL 1003494991 Fiestas populares de Atarfe, del 22 al 27 de julio : [progra
+FL 394 fie 478 FL 1003978491 Fiestas populares de Atarfe, del 20 al 26 de julio: [program
+FL 394 fie 478 FL 1003978463 Fiestas populares de Atarfe, del 24 al 29 de julio : [progra
+FL 394 FIE 478 FL 1006320816 Atarfe, programa de fiestas 1998 : Del 22 al 26 de julio.
+FL 394 FIE 478 FL 1006320847 Atarfe 1999 : Ven a las fiestas : del 22 al 26 de julio.
+FL 394 fie 478 FL 1007485940 Fiestas populares de Atarfe : programa 2016.
+FL 394 fie 478 FL 1003978450 Fiestas populares de Atarfe, julio 2010 del 22 al 26 : [prog
+FL 394 FIE 478 FL 1006321297 Fiestas patronales Atarfe, del 23 al 27 de julio : [program
+FL 394 fie 478 FL 1003141658 Fiestas populares de Atarfe, del 21 al 26 de julio : [progra
+FL 394 FIE 478 FL 1006321036 Fiestas 2004 : Atarfe [del 22 al 26 de julio] : [programa].
+FL 394 FIE 478 FL 1006320961 Fiestas Atarfe 2003 , del 23 al 27 de julio : [programa].
+FL 394 FIE 478 FL 1006320927 Fiestas Atarfe 2002 , del 24 al 28 de julio : [programa].
+FL 394 FIR 478 FL 1007067316 Fiestas de Atarfe, julio 2012, del 25 al 29 : [programa].
+FL 54 NUE Firmado po 478 FL 1010546845 Las nuevas microscopías : Herramientas para la exploración d
+FL 551 BUS 478 FL 1006696146 En busca del volcán de Sierra Elvira: sus grutas, sus cuevas
+FL 555 BUS 478 FL 1007573669 En busca del volcán de Sierra Elvira: sus grutas, sus cuevas
+FL 556 CAS 478 FL 1002052364 Manantiales
+FL 56 ENC 478 FL 1005608506 Trending topics in palaeontology : book of abstracts of the
+FL 582 PER 478 FL 1002052518 Orquídeas silvestres de la provincia de Granada /
+FL 616 NUÑ Donación a 478 FL 1010282952 Vida de una patología : neuropatía hereditaria Charcot-Marie
+FL 616 Nuñ Donación a 478 FL 1010282944 Vida de una patología : neuropatía hereditaria Charcot-Marie
+FL 621 EMB 478 FL 1007287228 Embalse del cubillas : Nuestra sencilla riqueza /
+FL 641 SAB 478 FL 1004391040 El sabor de las culturas : cocinas del mundo.
+FL 641 SAB 478 FL 1004391034 El sabor de las culturas : cocinas del mundo.
+FL 658 SAN 478 FL 1006574390 Atarfe : tierra de azúcar y alcohol /
+FL 658 SAN 478 FL 1006574394 Atarfe : tierra de azúcar y alcohol /
+24/11/2025 Página 2
+LISTADO TOPOGRÁFICO DE EJEMPLARES
+Signatura Sig. supl. Suc. Loc. Cod. Bar.Nº Reg. Título
+FL 7 LOP 478 FL 1006648050 Atarfe : patrimonio cultural y natural /
+FL 7 LOP 478 FL 1006648055 Atarfe : patrimonio cultural y natural /
+FL 7.03 ART 478 FL 1002052263 Arte islámico en Granada : propuesta para un Museo de la Alh
+FL 711 SAN 478 FL 1004844457 Plumillas de solidaridad /
+FL 72 GAR 478 FL 1001792144 Una aproximación a la obra de José Jiménez Jimena : arquitec
+FL 725 RUB 478 FL 1002059667 Patrimonio industrial en Granada /
+FL 726 ROM 478 FL 1002060226 El mundo funerario rural en la provincia de Granada durante
+FL 728 HUE 478 FL 1007216091 Huertas del Generalife : paisajes agrícolas de Al-Andalus--
+FL 737 FUE 478 FL 1002060386 La ceca ibero-romana de Iliberri, Granada /
+FL 738 CAN 478 FL 1002718454 La cerámica en Granada /
+FL 738 CER 478 FL 1001995082 Cerámicas islámicas y cristianas a finales de la Edad Media:
+FL 738 CER 478 FL 1002793372 La cerámica en entornos urbanos y rurales en el Mediterráneo
+FL 738 EST 478 FL 1002385880 Estudios de cerámica tardorromana y altomedieval /
+FL 738 EST 478 FL 1002385895 Estudios de cerámica tardorromana y altomedieval /
+FL 738 LOP 478 FL 1002638427 La cerámica de Madínat Ilbíra (Atarfe) y el poblamiento alto
+FL 75 ROM 478 FL 1002155871 El romántico errante : pintores europeos en el sur : [exposi
+FL 77 GAC 478 FL 1008244916 La gacetilla en Ideal: Atarfe /
+FL 77 MEM 478 FL 1006449270 Memoria gráfica de una ciudad : Atarfe.
+FL 77 ROD 478 FL 1008244832 Iguales, diferentes : [exposición] Atarfe, del 3 al 23 de no
+FL 796 GIL 478 FL 1007543874 Senderos e historias por la Vega de Granada : 100 km de pueb
+FL 796 GIL 478 FL 1007543873 Senderos e historias por la Vega de Granada : 100 km de pueb
+FL 796 PRO 478 FL 1006490198 Proyecto camina pedalea y corre /
+FL 796 PRO 478 FL 1006490200 Proyecto camina pedalea y corre /
+FL 796 UBI 478 FL 1007325146 La Vega de Granada : rutas para perderse y encontrarse /
+FL 796.5 TRE vin 478 FL 1008760968 Los tresmiles de Sierra Nevada : y otras excursiones de un d
+FL 82 OTR 478 FL 1008187650 Otro modo de ver los cuentos : versiones de cuentos tradicio
+FL 82-1 CAM Firmado po 478 FL 1010160430 El lugar de la caracola /
+FL 82-1 HIN yor 478 FL 1009593463 Y Orión en el camino /
+FL 82-1 MAR 478 FL 1007106952 Lo podemos conseguir
+FL 82-1 RUI 478 FL 1008187680 Mi amor entre sus letras /
+FL 82-1 SAN 478 FL 1009164365 Al final del sendero /
+FL 82-2 TEA Depósito 2 478 FL 1009171798 X Aniversario de la Fundación Sierra Elvira, 2011-2021 /
+FL 82-2 TEA 478 FL 1009171794 X Aniversario de la Fundación Sierra Elvira, 2011-2021 /
+FL 82-3 C UE 478 FL 1008220137 Cuentos de la Fundación 3.
+FL 82-3 COL 478 FL 1006918683 Y colorín colorete-- este cuento nos salió de rechupete.
+FL 82-3 CUE 478 FL 1007353458 Cuentos de la Fundación 2.
+FL 82-3 CUE 478 FL 1008219780 Cuentos de la Fundación 3.
+FL 82-3 CUE 478 FL 1007353462 Cuentos de la Fundación 2.
+FL 82-3 GAR 478 FL 1006920475 Escuchando a la abuela.
+FL 82-3 HIN 478 FL 1010058256 No todo es nieve en Moscú /
+FL 82-3 HIN 478 FL 1008570977 De relatos y cuentos con la mamá grande /
+FL 82-3 HIN 478 FL 1008962269 Viajando a capítulos y otros presentes /
+FL 82-3 MOR 478 FL 1008187716 La sonrisa de los perdedores /
+FL 82-3 PUL 478 FL 1010251162 Prohibida /
+FL 82-3 RUI 478 FL 1009006596 Una voz el las tinieblas /
+FL 82-3 RUI 478 FL 1007312229 Lágrimas de sombra /
+FL 82-3 RUI 478 FL 1006870817 En castellano derecho /
+FL 82-3 RUI 478 FL 1010604003 Crepúsculos rosados /
+FL 82-3 RUI 478 FL 1009590659 El último milagro /
+FL 82-3 RUI 478 FL 1009006603 Los cielos de Tordesillas /
+FL 82-3 RUI elv 478 FL 1010042601 Elvira, la voz de un ángel /
+FL 82-3 RUI ful 478 FL 1009854098 Fulgor de palabra y vida : (relatos) /
+FL 82-3 SAN Firmado po 478 FL 1010206668 Sigues siendo mi mundo /
+FL 821 ALH 478 FL 1001186362 8434 La Alhambra : relatos de Granada, recuerdos de Andalucía (18
+FL 821 PRE 478 FL 1002051859 6535 Premios Atalaya: 1997
+FL 821 PRE 478 FL 1002051877 6893 Premios Atalaya: 1998
+24/11/2025 Página 3
+LISTADO TOPOGRÁFICO DE EJEMPLARES
+Signatura Sig. supl. Suc. Loc. Cod. Bar.Nº Reg. Título
+FL 821 PRE 478 FL 1002051780 6139 Premios Atalaya: 1996
+FL 821 RUI 478 FL 1001994880 Nunca será la muerte como los hombres dicen /
+FL 821 RUI 478 FL 1002052295 El poeta enamorado /
+FL 821-1 HER 478 FL 1006000573 Efímera y eterna : poesía silenciosa, pintura que habla /
+FL 821-1 POE 478 FL 1007975257 Poemas escolares.
+Fl 821-1 POV 478 FL 1002051903 5452 Vivencias y pensamientos
+FL 821-1 POV 478 FL 1002418129 5652 Vivencias y pensamientos
+FL 821-1 RAJ 478 FL 1005723161 Recuerdos del ayer : poesía del corazón /
+FL 821-1 RAJ 478 FL 1005723166 Recuerdos del ayer : poesía del corazón /
+FL 821-3 CUE 478 FL 1006504951 Cuentos de la Fundación.
+FL 821-3 CUR 478 FL 1006504961 Cuentos de la Fundación.
+FL 821-3 DIA 478 FL 1010547359 Los márgenes de la memoria /
+FL 821-3 HID 478 FL 1010628271 La lluvia que llevas dentro /
+FL 821-3 JIM 478 FL 1006124535 Siente /
+FL 821-3 LOS 478 FL 1006260004 Algo más que magia /
+FL 821-3 MOR 478 FL 1007772358 La sonrisa de los perdedores /
+FL 821-3 PRE 478 FL 1002604615 7446 Premios Atalaya: 1999-2000
+FL 821-3 PUL 478 FL 1007723615 Un beso en el desierto /
+FL 821-3 PUL 478 FL 1009257103 Un copo de nieve andaluz /
+FL 821-3 REL 478 FL 1007890157 Relatos de ciencia ficción "Somnium" 2.
+FL 821-3 REL 478 FL 1008629602 Relatos de ciencia ficción "Somnium" 3.
+FL 821-3 REL 478 FL 1008629607 Relatos de ciencia ficción "Somnium" 3.
+FL 821-3 REL 478 FL 1007890154 Relatos de ciencia ficción "Somnium" 2.
+FL 821-3 RUI 43 478 FL 1007034231 Cumbres de libertad /
+FL 821-3 RUI Donado por 478 FL 1010545669 Luces de otoño /
+FL 821-3 RUI 478 FL 1007874693 Un cerco azul de colinas /
+FL 821-3 RUI 478 FL 1007876223 La tienda /
+FL 821-3 RUI 478 FL 1004509147 Esta luz que nos une /
+FL 821-3 RUI 478 FL 1006441573 Taifar /
+FL 821-3 RUI 478 FL 1005683631 El amor que nos queda /
+FL 821-3 RUI 478 FL 1009257076 Sol de invierno /
+FL 821-3 RUI 478 FL 1005865165 Elvira, la voz de un ángel /
+FL 821-3 RUI 478 FL 1006006408 Las fuentes del alma /
+FL 821-3 RUI 478 FL 1007874687 La tienda /
+FL 821-3 SAN 478 FL 1009628159 Eres mi mundo /
+FL 821-4 MON 478 FL 1008629663 La nueva realidad humana : Año 2000, primer libro /
+FL 902 ARQ 478 FL 1002052898 Arqueometría y arqueología medieval /
+FL 902 GAR 478 FL 1002059719 Museos arqueológicos de Andalucía II:Almeria, Granada, Jaén
+FL 902 GAR 478 FL 1002585388 7262 Museos arqueológicos de Andalucía II:Almeria, Granada, Jaén
+FL 903 ADR 478 FL 1002052339 La cultura ibérica /
+FL 903 CER 478 FL 1002060264 Cerámicas neolíticas de la provincia de Granada : Materias p
+FL 903 FER 478 FL 1010256243 Memoria de actuaciones. Programa de conservación y uso del p
+FL 903 GON 478 FL 1003425198 Antigüedades prehistóricas de Andalucía : monumentos, armas,
+FL 904 ATA 478 FL 1005671313 Atarfe y Elvira.
+FL 904 ATA 478 FL 1005671303 Atarfe y Elvira.
+FL 904 ESP 478 FL 1002051765 Medina Elvira : ciudad para la arqueología granadina /
+FL 904 ESP 478 FL 1002052555 Medina Elvira: ciudad para la arqueología granadina
+FL 904 GOM 478 FL 1002052538 Medina Elvira /
+FL 904 GOM 478 FL 1002059745 Monumentos romanos y visigóticos de Granada /
+FL 904 LOP 478 FL 1009199970 Mercaderes, artesanos y ulemas : las ciudades de las Coras d
+FL 908 ATA DEP 478 FL 1004844773 Atarfe : Guía Informativa Municipal 2012.
+FL 908 ATA 478 FL 1002063307 Atarfe: Libro-Video
+FL 908 ATA 478 FL 1001752354 Atarfe en el papel
+FL 908 ATA 478 FL 1004844888 Atarfe entre dos siglos : la transformación de una ciudad.
+FL 908 ATA 478 FL 1002051928 Atarfe
+FL 908 ATA 478 FL 1003814160 Atarfe en el papel
+24/11/2025 Página 4
+LISTADO TOPOGRÁFICO DE EJEMPLARES
+Signatura Sig. supl. Suc. Loc. Cod. Bar.Nº Reg. Título
+FL 908 ATA 478 FL 1008351988 Atarfe: Libro-Video
+FL 908 GUI 478 FL 1005766021 Guía de comercios, empresas y servicios. : 2013-2014.
+FL 908 SEC 478 FL 1004307635 1524 Plano de Granada árabe
+FL 910 SAN 478 FL 1005684370 Por la ruta de los pueblos de Granada /
+FL 910 SAN 478 FL 1005684296 Por la ruta de los pueblos de Granada /
+FL 914 MAD 478 FL 1001590026 Diccionario geográfico-estadístico-histórico de Andalucía ;
+FL 914 PEC 478 FL 1002628460 Sigüenza : city of the Doncel /
+FL 929 JIM 478 FL 1002052320 Personajes de la Granada romana /
+FL 930 EGU 478 FL 1002060302 Del lugar donde fue Iliberis /
+FL 930 MAT 478 FL 1007138627 El Archivo Histórico de la Parroquia de Nuestra Señora de la
+FL 930 MAT 478 FL 1007138630 El Archivo Histórico de la Parroquia de Nuestra Señora de la
+FL 94 FER 478 FL 1009236508 Trincheras, búnkeres y refugios de la guerra civil en la pro
+FL 94 GAR 478 FL 1007720713 Mozárabes en el origen de los reinos cristianos : la emigrac
+FL 94 HIS 478 FL 1007347999 Historias de Atarfe /
+FL 94 HIS 478 FL 1007353310 Historias de Atarfe /
+FL 94"15" BAR 478 FL 1002051720 Repoblación de la Vega de Granada en tiempo de Felipe II : A
+FL 94"15" BAR 478 FL 1002051700 2508 Repoblación de la Vega de Granada en tiempo de Felipe II : A
+FL 94(46) ATA 478 FL 1005974707 Atarfe : Personajes, apodos, símbolos y monumentos /
+FL DIA cue 478 FL 1009183820 Cuentos escritos desde el corazón /
+FL JIM sim 478 FL 1008762376 Un simple roce de mangas /
+FL RUI ben Firmado po 478 FL 1010224346 Bendita belleza /
+I COL fer 478 FL 1008899396 ¡Una fiesta terrorífica! /
+Total ejemplares: 190`;
+/* End of rawText */
+
+/* Render and search logic (same behavior and styling as AbsNet1) */
+const resultsNode = document.getElementById('results');
+const searchInput = document.getElementById('search');
+const clearBtn = document.getElementById('clear');
+const totalLinesSpan = document.getElementById('totalLines');
+
+let lines = rawText.split('\n');
+function render(linesToShow, q) {
+  // If q provided, highlight matches
+  if (!q) {
+    resultsNode.textContent = linesToShow.join('\n');
+  } else {
+    // escape q for RegExp
+    try {
+      const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'ig');
+      // Build HTML with highlighted matches
+      const html = linesToShow.map(line => {
+        if (re.test(line)) {
+          // Replace all matches with <span class="highlight">...</span>
+          return line.replace(re, match => `<span class="highlight">${match}</span>`);
+        } else {
+          return line;
+        }
+      }).join('<br>');
+      resultsNode.innerHTML = html;
+    } catch (err) {
+      // On invalid regex, fallback to simple includes (shouldn't happen)
+      const qlow = q.toLowerCase();
+      const html = linesToShow.map(line => {
+        const idx = line.toLowerCase().indexOf(qlow);
+        if (idx >= 0) {
+          const before = line.slice(0, idx);
+          const match = line.slice(idx, idx + qlow.length);
+          const after = line.slice(idx + qlow.length);
+          return before + '<span class="highlight">' + match + '</span>' + after;
+        } else return line;
+      }).join('<br>');
+      resultsNode.innerHTML = html;
+    }
+  }
+  totalLinesSpan.textContent = linesToShow.length;
+}
+
+// initial render (all)
+render(lines, '');
+
+// filter function: returns lines that contain q (case-insensitive) OR, if q empty, all lines
+function filterAndRender(q) {
+  if (!q) {
+    render(lines, '');
+    return;
+  }
+  const qlow = q.toLowerCase();
+  const filtered = lines.filter(l => l.toLowerCase().includes(qlow));
+  render(filtered, q);
+}
+
+// events
+searchInput.addEventListener('input', (e) => {
+  const q = e.target.value.trim();
+  filterAndRender(q);
+});
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    searchInput.value = '';
+    filterAndRender('');
+  }
+});
+clearBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  searchInput.focus();
+  filterAndRender('');
+});
+
+// download the HTML file (current page) - creates a blob of the current full HTML
+document.getElementById('download').addEventListener('click', () => {
+  const doc = '<!doctype html>\n' + document.documentElement.outerHTML;
+  const blob = new Blob([doc], {type: 'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'listado_absnet2.html';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+// Accessibility: focus search input on load
+window.addEventListener('load', () => searchInput.focus());
+</script>
+</body>
+</html>
